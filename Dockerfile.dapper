@@ -1,6 +1,7 @@
 FROM golang:1.6
 RUN go get github.com/imikushin/trash
 RUN go get github.com/golang/lint/golint
+RUN go get -u github.com/davecgh/go-spew/spew
 RUN curl -sL https://get.docker.com/builds/Linux/x86_64/docker-1.9.1 > /usr/bin/docker && \
     chmod +x /usr/bin/docker
 RUN apt-get update && \
@@ -12,6 +13,7 @@ ENV DAPPER_OUTPUT bin dist
 ENV DAPPER_DOCKER_SOCKET true
 ENV DAPPER_ENV TAG REPO CROSS
 ENV TRASH_CACHE ${DAPPER_SOURCE}/.trash-cache
+ENV CROSS true
 WORKDIR ${DAPPER_SOURCE}
 ENTRYPOINT ["./scripts/entry"]
-CMD ["ci"]
+CMD ["build"]

@@ -11,6 +11,9 @@ import (
 	rLookup "github.com/rancher/rancher-compose/lookup"
 	"github.com/rancher/rancher-compose/rancher"
 	"github.com/rancher/rancher-compose/upgrade"
+	"github.com/davecgh/go-spew/spew"
+	"fmt"
+	"reflect"
 )
 
 type ProjectFactory struct {
@@ -119,6 +122,16 @@ func RestartCommand(factory app.ProjectFactory) cli.Command {
 				Usage: "Restart interval in milliseconds",
 				Value: 0,
 			},
+		},
+	}
+}
+
+func InfoCommand(factory app.ProjectFactory) cli.Command {
+	return cli.Command{
+		Name:   "info",
+		Usage:  "Get info about service",
+		Action: app.WithProject(factory, Info),
+		Flags: []cli.Flag{
 		},
 	}
 }
@@ -234,6 +247,47 @@ func Upgrade(p *project.Project, c *cli.Context) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+}
+
+func Info(p *project.Project, c *cli.Context) {
+	args := c.Args()
+	fmt.Printf("args: %+v\n", args)
+	if len(args) != 1 {
+		logrus.Fatalf("Please pass arguments in the form: [service]")
+	}
+	fmt.Printf("project: %+v\n", p);
+	fmt.Printf("project type: %v\n", reflect.TypeOf(p));
+	fmt.Printf("project package: %v\n", reflect.TypeOf(p).PkgPath());
+
+	fromService, err := p.CreateService(args[0])
+		if err != nil {
+		logrus.Fatalf("Could not create From Service")
+	}
+
+	// toService, err := p.CreateService(args[0])
+	// if err != nil {
+	// 	logrus.Fatalf("Could not create To Service")
+	// }
+	rFromService, ok := fromService.(*rancher.RancherService)
+	if !ok {
+		logrus.Fatalf("%s is not a Rancher service", args[0])
+	}
+
+	source, err := rFromService.RancherService()
+	if err != nil {
+		logrus.Fatalf("error getting rancherservice")
+	}
+
+	spew.Dump(source)
+	fmt.Printf("\n-------------------------------------\n")
+
+	id := source.EnvironmentId
+	e,_ := rFromService.Context().Client.Environment.ById(id)
+	spew.Dump(e);
+	fmt.Printf("\n-------------------------------------\n")
+	spew.Dump(e.DockerCompose)
+	fmt.Printf("\n-------------------------------------\n")
+
 }
 
 // StopCommand defines the libcompose stop subcommand.

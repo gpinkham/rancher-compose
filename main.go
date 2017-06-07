@@ -80,7 +80,8 @@ func cliMain() {
 		command.RmCommand(factory),
 		rancherApp.PullCommand(factory),
 		rancherApp.UpgradeCommand(factory),
-	}
+  	rancherApp.InfoCommand(factory),
+}
 
 	if err := app.Run(os.Args); err != nil {
 		logrus.Fatal(err)

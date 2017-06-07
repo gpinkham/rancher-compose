@@ -4,11 +4,13 @@ cd $(dirname $0)/..
 
 source $(dirname $0)/version
 
-OS_PLATFORM_ARG=(linux windows darwin freebsd)
-OS_ARCH_ARG=(386 amd64 arm)
+CROSS=true
+
+OS_PLATFORM_ARG=(linux)
+OS_ARCH_ARG=(amd64)
 
 go generate
-go build -ldflags="-w -X github.com/rancher/rancher-compose/version.VERSION=$VERSION" -o bin/rancher-compose
+#go build -ldflags="-w -X github.com/rancher/rancher-compose/version.VERSION=$VERSION" -o bin/rancher-compose
 
 if [ -n "$CROSS" ]; then
     rm -rf build/bin
@@ -29,6 +31,7 @@ if [ -n "$CROSS" ]; then
             GOARCH=$ARCH GOOS=$OS CGO_ENABLED=0 go build \
                   -ldflags="-w -X github.com/rancher/rancher-compose/version.VERSION=$VERSION" \
                   -o ${OUTPUT_BIN} ./
+            cp ${OUTPUT_BIN} bin/rancher-compose
         done
     done
 fi
