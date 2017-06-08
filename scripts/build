@@ -6,7 +6,7 @@ source $(dirname $0)/version
 
 CROSS=true
 
-OS_PLATFORM_ARG=(linux)
+OS_PLATFORM_ARG=(linux darwin)
 OS_ARCH_ARG=(amd64)
 
 go generate
@@ -31,7 +31,7 @@ if [ -n "$CROSS" ]; then
             GOARCH=$ARCH GOOS=$OS CGO_ENABLED=0 go build \
                   -ldflags="-w -X github.com/rancher/rancher-compose/version.VERSION=$VERSION" \
                   -o ${OUTPUT_BIN} ./
-            cp ${OUTPUT_BIN} bin/rancher-compose
+            cp ${OUTPUT_BIN} bin/rancher-compose_$OS-$ARCH
         done
     done
 fi
