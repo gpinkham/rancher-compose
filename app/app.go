@@ -12,8 +12,9 @@ import (
 	"github.com/rancher/rancher-compose/rancher"
 	"github.com/rancher/rancher-compose/upgrade"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/rancher/go-rancher/client"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"fmt"
-	"reflect"
 )
 
 type ProjectFactory struct {
@@ -255,38 +256,31 @@ func Info(p *project.Project, c *cli.Context) {
 	if len(args) != 1 {
 		logrus.Fatalf("Please pass arguments in the form: [service]")
 	}
-	fmt.Printf("project: %+v\n", p);
-	fmt.Printf("project type: %v\n", reflect.TypeOf(p));
-	fmt.Printf("project package: %v\n", reflect.TypeOf(p).PkgPath());
-
 	fromService, err := p.CreateService(args[0])
 		if err != nil {
 		logrus.Fatalf("Could not create From Service")
 	}
-
-	// toService, err := p.CreateService(args[0])
-	// if err != nil {
-	// 	logrus.Fatalf("Could not create To Service")
-	// }
 	rFromService, ok := fromService.(*rancher.RancherService)
 	if !ok {
 		logrus.Fatalf("%s is not a Rancher service", args[0])
 	}
-
+	localComposeString := string(rFromService.Context().ComposeBytes[0][:])
+	if (false) {
+	 	spew.Dump(localComposeString)
+	}
 	source, err := rFromService.RancherService()
 	if err != nil {
 		logrus.Fatalf("error getting rancherservice")
 	}
-
-	spew.Dump(source)
-	fmt.Printf("\n-------------------------------------\n")
-
 	id := source.EnvironmentId
 	e,_ := rFromService.Context().Client.Environment.ById(id)
-	spew.Dump(e);
-	fmt.Printf("\n-------------------------------------\n")
-	spew.Dump(e.DockerCompose)
-	fmt.Printf("\n-------------------------------------\n")
+	ec,_ := rFromService.Context().Client.Environment.ActionExportconfig(e, &client.ComposeConfigInput{})
+	// spew.Dump(ec)
+	// fmt.Printf("\n-------------------------------------\n")
+	remoteComposeString := ec.DockerComposeConfig
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(localComposeString, remoteComposeString, false)
+	fmt.Println(dmp.DiffPrettyText(diffs))
 
 }
 
